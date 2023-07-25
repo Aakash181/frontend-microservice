@@ -13,12 +13,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../mycss/global.css">
     <link rel="stylesheet" href="../mycss/landing-pages.css">
+    
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+
 </head>
 
 <body>
+
+     <div
+      id="g_id_onload"
+      data-client_id="585474362845-eu7rs5qv365maruqpigfgnv6720m64ih.apps.googleusercontent.com"
+      data-callback="Google_signIn"
+    ></div>
+
+
+
     <style>
         body::before{
-            background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.2) 60%, rgba(0, 0, 0, 0.9) 100%),url('../../images/netflix\ clone\ home\ page\ background\ image\ multiple\ shows\ collage.jpg');
+            background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.2) 60%, rgba(0, 0, 0, 0.9) 100%),url('https://image.winudf.com/v2/image1/Y29tLmZyZWUubW92aWUub25saW5lLmhkbW92aWVzZnJlZV9zY3JlZW5fMl8xNjA1MDA1NTc0XzA2MA/screen-2.jpg?fakeurl=1&type=.webp');
 
         }
     </style>
@@ -39,20 +53,30 @@
             <!--Login form start-->
 
                 <div class="loginContainer d-flex direction-column">
+                    <p>{{ message}}</p>
                     <p>⚠ Do not enter your personal information.</p>
                     <h2 class="formtitle">
                         Sign In
                     </h2>
-                    <form action="" id="loginForm" class="d-flex direction-column" method="post" name="loginForm">
+                    <form action="/" id="loginForm" class="d-flex direction-column" method="POST" name="loginForm">
                         <input type="text" name="email" id="email" class="email" placeholder="Email or phone number" onchange="validateEmail()" required/>
                         <p id="errorEmail">Please enter a valid email address or phone number.</p>
 
                         <input type="password" name="password" id="password" placeholder="Password" required/>
                         <p id="errorPassword">Your password must contain between 4 and 60 characters.</p>
 
-                        <button type="submit" class="button submitButton" id="signInButton" disabled="disabled">
-                            <a style="text-decoration: none; color: white;" href="/user_dashboard/browse.html">Sign In</a>
+                        {{!-- <button type="submit" class="button submitButton" id="signInButton" disabled="disabled">
+                            <a style="text-decoration: none; color: white;" href="">Sign In</a>
+                        </button>` --}}
+
+                        <button type="submit" class="button submitButton" >
+                            <a style="text-decoration: none; color: white;" href="">Sign In</a>
                         </button>
+                        
+                        <br>
+
+                        <div class="g_id_signin" data-type="icon"></div>
+
 
                         <div class="rememberMe">
                             <input type="checkbox" name="rememberMe" id="rememberMe" class="rememberMe">
@@ -94,6 +118,40 @@ document.getElementById("signInButton")?.addEventListener("click", function(e){
    e.preventDefault();
 })
     </script>
+
+
+
+    <script>
+      function Google_signIn(response) {
+        const responsePayload = decodeJwtResponse(response.credential);
+
+        console.log("ID: " + responsePayload.sub);
+        console.log("Full Name: " + responsePayload.name);
+        console.log("Given Name: " + responsePayload.given_name);
+        console.log("Family Name: " + responsePayload.family_name);
+        console.log("Image URL: " + responsePayload.picture);
+        console.log("Email: " + responsePayload.email);
+      }
+
+      function decodeJwtResponse(token) {
+        var base64Url = token.split(".")[1];
+        var base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        var jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split("")
+            .map(function (c) {
+              return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+            })
+            .join("")
+        );
+
+        return JSON.parse(jsonPayload);
+      }
+    </script>
+
+
+
+
 </body>
 
 </html>

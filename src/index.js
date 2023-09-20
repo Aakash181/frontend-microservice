@@ -1,6 +1,6 @@
 const express =require("express");
 const http = require("http");
-var con = require("./mysql")
+// var con = require("./mysql")
 const path = require("path");
 const session = require('express-session');
 const app =express();
@@ -37,7 +37,7 @@ app.use(session({
 //----------------------------------------------
 //------------Mysql database--------------------
 
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const { json } = require("body-parser");
 const connection = mysql.createConnection({
     host: process.env.MYSQL_HOST || "mysql-service.default.svc",

@@ -18,7 +18,7 @@
     "fast-two-sms": "^3.0.0",
     "hbs": "^4.2.0",
     "jquery": "^3.6.0",
-    "mysql": "^2.18.1"
+    "mysql2": "^3.6.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.19"

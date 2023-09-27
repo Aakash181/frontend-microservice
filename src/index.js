@@ -44,7 +44,6 @@ const connection = mysql.createConnection({
     // host: process.env.MYSQL_HOST || "localhost",
     user: process.env.MYSQL_USER || "root",
     password: process.env.MYSQL_PASSWORD || "YOUR-PASSWORD",
-    // password: process.env.MYSQL_PASSWORD || "YOUR-PASSWORD",
     database: process.env.MYSQL_DATABASE || "demodb"
 });
 
@@ -62,50 +61,38 @@ app.get("/login",(req,res) => {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-app.post("/",(req,res) =>{
-    // console.log(req.body)
+app.post("/", (req, res) => {
     var email = req.body.email;
-    var password= req.body.password;
-    if(email && password)
-    {
+    var password = req.body.password;
+    if (email && password) {
         var sql = `select Name,email,password from customer where email="${email}" and password="${password}"`;
-        // console.log(sql);
-        connection.query(sql,function(err,result) {
-            if (err== null && result.length<=0) {
+
+        connection.query(sql, function (err, result) {
+            if (err) {
+                console.log('Database query failed. ' + err.message);
+                return res.status(500).send('Internal Server Error');
+            }
+
+            if (result.length <= 0) {
                 return res.status(401).render('login', {
                     message: 'Email or Password is incorrect'
-                })
-                res.end;
-            }
-            else
-            {
-                // if (err) throw new Error('database failed to connect');
-                var data=JSON.parse(JSON.stringify(result))
-                const names ={
-                    value: `${data[0].Name}`
-                }
-    
-                if(result.length >0)
-                {
+                });
+            } else {
+                var names = {
+                    value: `${result[0].Name}`
+                };
+
+                if (result.length > 0) {
                     req.session.loggedin = true;
-                    req.session.username =names;
-                    // return res.render("browse",{names});
+                    req.session.username = names;
                     return res.redirect("/");
-                    // res.end();
-                }                
-                else{
-                    // res.render("login");
-                    res.send("incorrect username or password");
+                } else {
+                    res.send("Incorrect username or password");
                 }
-                // res.end();
-                
             }
-
-        })
-
+        });
     }
 });
-
 app.get("/",(req,res) => {
     if (req.session.loggedin) {
         // const name=req.session.username;

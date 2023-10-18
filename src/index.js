@@ -40,7 +40,11 @@ app.use(session({
 const mysql = require('mysql2');
 const { json } = require("body-parser");
 const connection = mysql.createConnection({
+
+    //this is for mysql pod
     host: process.env.MYSQL_HOST || "mysql-service.default.svc",
+
+    //this is for localhost testing
     // host: process.env.MYSQL_HOST || "localhost",
     user: process.env.MYSQL_USER || "root",
     password: process.env.MYSQL_PASSWORD ,

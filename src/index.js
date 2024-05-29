@@ -1,5 +1,6 @@
 const express =require("express");
 const http = require("http");
+const axios = require('axios');
 // var con = require("./mysql")
 const path = require("path");
 const session = require('express-session');
@@ -8,8 +9,8 @@ const hbs =require("hbs");
 const cookie_parser=require('cookie-parser');
 
 var bodyParser = require('body-parser')
-const PORT = process.env.PORT || 30008 ;
-const video_streaming_host= process.env.video_streaming_host || "video-streaming-service";
+const PORT = process.env.PORT || 3000 ;
+const video_streaming_host= process.env.video_streaming_host || "localhost";
 const video_streaming_port= process.env.video_streaming_port || 30001;
 const partialpath = path.join(__dirname,"../templates/partials");
 const staticpath = path.join(__dirname,"../public");
@@ -42,13 +43,13 @@ const { json } = require("body-parser");
 const connection = mysql.createConnection({
 
     //this is for mysql pod
-    host: process.env.MYSQL_HOST || "mysql-service.default.svc",
+    // host: process.env.MYSQL_HOST || "mysql-service.default.svc",
 
     //this is for localhost testing
-    // host: process.env.MYSQL_HOST || "localhost",
+    host: process.env.MYSQL_HOST || "192.168.43.77",
     user: process.env.MYSQL_USER || "root",
-    password: process.env.MYSQL_PASSWORD ,
-    database: process.env.MYSQL_DATABASE 
+    password: process.env.MYSQL_PASSWORD || "Aakash8085",
+    database: process.env.MYSQL_DATABASE || "demodb"
 });
 
 connection.connect((err) => {
@@ -59,6 +60,125 @@ connection.connect((err) => {
     }
 });
 //-------------------------------------------------------------
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+app.use(session({
+    resave: false,
+    saveUninitialized: true,
+    secret: 'SECRET'
+  }));
+  app.use(passport.initialize());
+  app.use(passport.session());
+  
+  // Set the view engine
+  // app.set('view engine', 'ejs');
+  
+  // Initialize a MySQL connection
+  const db = mysql.createConnection({
+    host: '192.168.43.77',
+    user: 'root',
+    password: 'Aakash8085',
+    database: 'demodb',
+  });
+  
+  // Passport configuration
+  passport.serializeUser(function (user, cb) {
+    cb(null, user);
+  });
+  
+  passport.deserializeUser(function (obj, cb) {
+    cb(null, obj);
+  });
+  
+  const GOOGLE_CLIENT_ID = '585474362845-eu7rs5qv365maruqpigfgnv6720m64ih.apps.googleusercontent.com';
+  const GOOGLE_CLIENT_SECRET = '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';
+  
+  passport.use(new GoogleStrategy({
+    clientID: GOOGLE_CLIENT_ID,
+    clientSecret: GOOGLE_CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/google/callback"
+  },
+    function (accessToken, refreshToken, profile, done) {
+      return done(null, profile);
+    }
+  ));
+  
+  // Define your routes
+  app.get('/success', (req, res) => {
+    res.send(req.user);
+  });
+  
+  app.get('/error', (req, res) => {
+    res.send("Error logging in");
+  });
+  
+  app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }), function(req, res) {
+    // This function will be called after the passport.authenticate middleware
+  });
+  
+  app.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/login' }),
+    function (req, res) {
+      // Successful authentication, save user data to the database if it doesn't exist
+      const user = req.user;
+      console.log("hi ");
+      // console.log(req);
+      checkAndSaveUserToDatabase(user, (err) => {
+        if (err) {
+          console.error('Error saving user data to the database:', err);
+          res.status(500).send('Error saving user data to the database');
+        } else {
+          console.log("login success");
+          req.session.loggedin = true;
+          res.redirect("/browse")
+          // res.render("browse");
+        }
+      });
+    });
+  
+  // Check if a user with the same Google ID already exists in the database
+  function checkAndSaveUserToDatabase(user, callback) {
+    db.query(
+      'SELECT * FROM users WHERE google_id = ?',
+      [user.id],
+      (err, results) => {
+        if (err) {
+          callback(err);
+        } else if (results.length === 0) {
+          // No existing user with the same Google ID, insert the user
+          saveUserToDatabase(user, callback);
+        } else {
+          // User already exists, no need to insert
+          callback(null);
+        }
+      }
+    );
+  }
+  
+  // Save user data to the database
+  function saveUserToDatabase(user, callback) {
+    db.query(
+      'INSERT INTO users (google_id, display_name, email, picture_url) VALUES (?, ?, ?, ?)',
+      [user.id, user.displayName, user.emails[0].value, user.photos[0].value],
+      (err, results) => {
+        callback(err);
+      }
+    );
+  }
+  
+  // Close the database connection when the application exits
+  process.on('exit', () => {
+    db.end();
+  });
+  
+  // Handle Ctrl+C to gracefully close the database connection
+  process.on('SIGINT', () => {
+    db.end(() => {
+      console.log('Database connection closed.');
+      process.exit(0);
+    });
+  });
+////////////////////////////////////////////////////////////////////////////////
 app.get("/login",(req,res) => {
     res.render("login");
 });
